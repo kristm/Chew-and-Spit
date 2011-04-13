@@ -17,6 +17,9 @@ module PHPParser
         return /(public|protected|private)?\s?function\s([a-zA-Z\_]+)\s?\(([a-zA-Z0-9\$\,\=\-\_\s]+)?\)\{?$/
     end
 
+    def self.ref_method
+        return /new\s([a-zA-Z\_]+)/
+    end
 end
 
 class MethodDef
@@ -29,7 +32,7 @@ end
 class Code
     include PHPParser
     attr_reader :dir, :props, :methods
-    attr_accessor :class_name, :super_class
+    attr_accessor :class_name, :super_class, :ref_method
 
     def initialize(level,dir)
         @level = level.to_s
@@ -67,6 +70,8 @@ class Code
                     method.params << $3 if $3 != nil
                     self.methods << method
                     #self.methods << $2 if $2 != nil
+                when PHPParser.ref_method
+                    self.ref_method = $1
                 end
             end
         ensure
@@ -194,13 +199,22 @@ class Chew
         doc.render :pdf, :filename=>'rs_codes.pdf'
 
         lastdir = nil
-
+        mod_re = /[a-zA-Z]+$/
         Repo.collection.each do |obj|
             if Repo.class_exists? obj.super_class and not obj.super_class.nil?
+                gv.edge[:color] = "black"
                 #find dir of class and super class so you can find its cluster
                 super_dir = Repo.get_dir obj.super_class
                 sub_dir = Repo.get_dir obj.class_name
-                eval("gv."+Repo.cluster[super_dir]+"."+obj.super_class) << eval("gv."+Repo.cluster[sub_dir]+"."+obj.class_name)
+                eval("gv."+Repo.cluster[super_dir]+"."+obj.super_class[mod_re]) << eval("gv."+Repo.cluster[sub_dir]+"."+obj.class_name[mod_re])
+            end
+            if Repo.class_exists? obj.ref_method and not obj.ref_method.nil?
+                gv.edge[:color] = "red"
+                ref_dir = Repo.get_dir obj.ref_method
+                sub_dir = Repo.get_dir obj.class_name
+                #eval("gv."+Repo.cluster[ref_dir]+"."+obj.ref_method[mod_re]) << eval("gv."+Repo.cluster[sub_dir]+"."+obj.class_name[mod_re])
+                eval("gv."+Repo.cluster[sub_dir]+"."+obj.class_name[mod_re]) << eval("gv."+Repo.cluster[ref_dir]+"."+obj.ref_method[mod_re])
+                
             end
         end
 
