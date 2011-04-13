@@ -146,8 +146,17 @@ class Chew
             tag :h6, :name=>'Helvetica', :size=>10, :color=>:red
             tag :h7, :name=>'Helvetica', :size=>10, :color=>:blue
         end
+
+        lastdir = nil
+        ci = 0
         Repo.collection.each do |obj|
-            gv_set[obj.class_name] = gv.add_node(obj.class_name) if not obj.class_name.nil?
+            if obj.dir != lastdir and not lastdir.nil? 
+                cluster_name = "cluster#{ci}"
+                gv.send(cluster_name.to_sym, :label=>obj.dir) do |cluster|
+                    gv_set[obj.class_name] = gv.add_node(obj.class_name) if not obj.class_name.nil?
+                end
+                ci += 1
+            end
             doc.next_row
             doc.show_next_row obj.dir, :with => :h4
             doc.next_row
@@ -167,24 +176,13 @@ class Chew
             end if obj.methods.length > 0
         end
         doc.render :pdf, :filename=>'rs_codes.pdf'
-=begin
-        gv_set.each do |node,value|
-            n1 = value
-            #need to add find class method in Repo. to retrieve parent class by class_name 
-            #or just iterate Repo.collection again to build gv relationship if parent class found
-            #in Repo.collection
-        end
-=end
-        Repo.collection.shuffle.each do |obj|
+
+        Repo.collection.each do |obj|
             if Repo.class_exists? obj.super_class and not obj.super_class.nil?
                 gv.add_edge(gv_set[obj.class_name],gv_set[obj.super_class]) 
             end
         end
-        #gv.output( :pdf => "graph.pdf")
-        #gv.output( :png => "graph.png")
-        #gv.add_edge(gv_set['Application_Model_Categories'],gv_set['RiskSense_Model_Base'])
-        #gv.add_edge(@appcat,@modelbase)
-        #gv.output( :png => "graph.png")
+
         gv.output( :pdf => "graph.pdf")
     end
 end
