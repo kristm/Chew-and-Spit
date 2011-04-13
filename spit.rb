@@ -78,6 +78,7 @@ end
 class Repo
     include Singleton
     @@collection = []
+    @@cluster = {}
     def Repo.collection= (obj)
         @@collection << obj
         #puts @@collection.length
@@ -93,6 +94,21 @@ class Repo
             return true if obj.class_name == class_name
         end
         return false
+    end
+
+    def Repo.get_dir class_name
+        @@collection.each do |obj|
+            return obj.dir if obj.class_name == class_name
+        end
+        return nil
+    end
+
+    def Repo.pack(key,value)
+        @@cluster[key] = value
+    end
+
+    def Repo.cluster
+        return @@cluster
     end
 end
 
@@ -150,11 +166,11 @@ class Chew
         lastdir = nil
         ci = 0
         Repo.collection.each do |obj|
-            if obj.dir != lastdir and not lastdir.nil? 
+            if obj.dir != lastdir 
+                lastdir = obj.dir
                 cluster_name = "cluster#{ci}"
-                gv.send(cluster_name.to_sym, :label=>obj.dir) do |cluster|
-                    gv_set[obj.class_name] = gv.add_node(obj.class_name) if not obj.class_name.nil?
-                end
+                Repo.pack(obj.dir,cluster_name)
+                gv.send(cluster_name.to_sym,:label=>obj.dir) {|x| }
                 ci += 1
             end
             doc.next_row
@@ -177,15 +193,20 @@ class Chew
         end
         doc.render :pdf, :filename=>'rs_codes.pdf'
 
+        lastdir = nil
+
         Repo.collection.each do |obj|
             if Repo.class_exists? obj.super_class and not obj.super_class.nil?
-                gv.add_edge(gv_set[obj.class_name],gv_set[obj.super_class]) 
+                #find dir of class and super class so you can find its cluster
+                super_dir = Repo.get_dir obj.super_class
+                sub_dir = Repo.get_dir obj.class_name
+                eval("gv."+Repo.cluster[super_dir]+"."+obj.super_class) << eval("gv."+Repo.cluster[sub_dir]+"."+obj.class_name)
             end
         end
 
         gv.output( :pdf => "graph.pdf")
+
     end
 end
-
 Chew.walk
 Chew.spit
