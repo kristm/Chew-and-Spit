@@ -157,6 +157,7 @@ class Chew
         doc = RGhost::Document.new
         gv = GraphViz::new("G")
         gv[:size] = "4,4"
+        gv.edge[:color] = "red"
         gv_set = {}
         doc.define_tags do
             tag :h1, :name=>'Helvetica-Bold', :size=>14, :color=>:blue
@@ -212,7 +213,6 @@ class Chew
                 gv.edge[:color] = "red"
                 ref_dir = Repo.get_dir obj.ref_method
                 sub_dir = Repo.get_dir obj.class_name
-                #eval("gv."+Repo.cluster[ref_dir]+"."+obj.ref_method[mod_re]) << eval("gv."+Repo.cluster[sub_dir]+"."+obj.class_name[mod_re])
                 eval("gv."+Repo.cluster[sub_dir]+"."+obj.class_name[mod_re]) << eval("gv."+Repo.cluster[ref_dir]+"."+obj.ref_method[mod_re])
                 
             end
