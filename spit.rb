@@ -104,14 +104,17 @@ end
 class Chew
     include Singleton
 
-    @@exclude = []
+    @@exclude_dir = []
 
-    def self.exclude= (*patterns)
-       @@exclude = patterns 
+    def self.exclude_dir= (*patterns)
+        patterns = patterns.flatten
+        patterns.each do |pattern|
+            @@exclude_dir << pattern
+        end
     end
 
-    def self.exclude? val
-        @@exclude.each do |pattern|
+    def self.exclude_dir? val
+        @@exclude_dir.each do |pattern|
             return true if val =~ pattern
         end
         return false
@@ -122,7 +125,7 @@ class Chew
         ind = " "
         Dir.foreach(dir) do |x|
             path = (i==1) ? x : dir+"/"+x
-            next if dir =~ /library\/Zend/ or dir =~ /library\/TCPDF/ or dir =~ /library\/WCG/ or dir =~ /public/ or dir =~ /tests/
+            next if self.exclude_dir? dir
             if File.directory? path and x != '.' and x != '..' and x[0,1] != '.'
                 a = ""
                 i.times{a += tab}
@@ -140,7 +143,7 @@ class Chew
         end
         return if i == 1
     end
-    def self.spit
+    def self.spit outfile
         #sort Repo.collection before doing anything
         for i in 0..Repo.collection.length-1
             j=0
@@ -195,7 +198,7 @@ class Chew
                 doc.show " -- #{m.params.join}", :with => :h5 if m.params.length > 0
             end if obj.methods.length > 0
         end
-        doc.render :pdf, :filename=>'rs_codes.pdf'
+        doc.render :pdf, :filename=>"#{outfile}"
 
         lastdir = nil
         mod_re = /[a-zA-Z]+$/
@@ -217,9 +220,20 @@ class Chew
         end
 
         gv.output( :pdf => "graph.pdf")
-
     end
 end
 
-Chew.walk
-Chew.spit
+def main
+    if ARGV.length == 0
+        puts "Usage: #{$0} outfile"
+        exit
+    end
+
+    outfile = ARGV[0]
+
+    Chew.exclude_dir = /library\/Zend/,/library\/TCPDF/,/library\/WCG/,/public/,/tests/
+    Chew.walk
+    Chew.spit outfile
+end
+
+main() if __FILE__ == $0
