@@ -3,24 +3,8 @@ require 'singleton'
 require 'rubygems'
 require 'rghost'
 require 'graphviz'
+require File.dirname(__FILE__) + '/parser/php_parser'
 
-module PHPParser
-    def self.class_def
-        return /^class\s([a-zA-Z\_]+)(?:\sextends\s([a-zA-Z\_]+))?/
-    end
-
-    def self.property
-        return /(public|protected|private)\s(\$[a-zA-Z\_\-]+)\;$/
-    end
-
-    def self.method
-        return /(public|protected|private)?\s?function\s([a-zA-Z\_]+)\s?\(([a-zA-Z0-9\$\,\=\-\_\s]+)?\)\{?$/
-    end
-
-    def self.ref_method
-        return /new\s([a-zA-Z\_]+)/
-    end
-end
 
 class MethodDef
     attr_accessor :name,:access,:params
@@ -119,6 +103,20 @@ end
 
 class Chew
     include Singleton
+
+    @@exclude = []
+
+    def self.exclude= (*patterns)
+       @@exclude = patterns 
+    end
+
+    def self.exclude? val
+        @@exclude.each do |pattern|
+            return true if val =~ pattern
+        end
+        return false
+    end
+
     def self.walk(dir='.',i=1)
         tab = "=="
         ind = " "
@@ -222,5 +220,6 @@ class Chew
 
     end
 end
+
 Chew.walk
 Chew.spit
