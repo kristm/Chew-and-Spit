@@ -29,5 +29,5 @@ support at the moment, but support for other languages will be thrown in, gradua
 Usage
 -----
 
-spit.rb <outputfile.pdf>
+    $ spit.rb <outputfile.pdf>
 
