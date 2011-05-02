@@ -1,7 +1,7 @@
 Chew & Spit
 ==============
 
-#### A Source code profiler written in Ruby
+#### A Source code documentatation tool written in Ruby
 
 The problem with working on large systems is that they can grow
 from a handful of file to a tangled mess of codes some of which
@@ -17,7 +17,7 @@ of 'how to tackle large systems' (As a developer, this been a constant
 source of both annoyance and pain and I'm compelled to find a means around this).
 
 Chew and Spit is designed to be extensible so it won't just be working
-on one system but on a variety of languages. It is limited to PHP
+on one system but (potentially) on a variety of systems/languages. It is limited to PHP
 support at the moment, but support for other languages will be thrown in, gradually.
 
 
